@@ -1,0 +1,13 @@
+# SDKcraft build artifacts — rebuilt by `sdkcraft pack`/`try`; released copies
+# live on the SDK Store, so never commit them.
+*.sdk
+
+# SDKcraft local build state.
+/parts/
+/stage/
+/prime/
+*.snap
+
+# Local scratch workshop used to try the SDK (workshop writes .workshop.lock and
+# live state under it).
+/scratch/.workshop.lock

@@ -1,0 +1,50 @@
+# Thin Terraform Workshop SDK.
+#
+# Ships ONLY the HashiCorp Terraform CLI as a prebuilt binary — no credentials,
+# no provider configuration, no Vault/state/cloud tooling. Optional capabilities
+# (a persistent provider plugin cache, SSH-agent access for private git modules)
+# are exposed as plugs the consuming workshop wires as needed.
+name: terraform-cli
+version: "1.15.7" # keep in sync with ./VERSION (Renovate bumps VERSION)
+summary: The HashiCorp Terraform CLI, packaged as a thin Workshop SDK
+description: |
+  A thin Workshop SDK that installs the HashiCorp Terraform CLI from the
+  official release archive. It carries no credentials and no provider
+  configuration — only the terraform executable, an optional persistent
+  provider plugin cache (mount plug), and optional SSH-agent access for
+  fetching private git modules during `terraform init`/`get`.
+# BUSL-1.1 reflects the bundled Terraform binary (>= 1.6). The SDK packaging
+# (this definition + hooks) is trivial glue distributed under the same terms.
+license: BUSL-1.1
+platforms:
+  ubuntu@22.04:amd64:
+  ubuntu@24.04:amd64:
+  ubuntu@24.04:arm64:
+
+parts:
+  terraform:
+    # HashiCorp ships prebuilt binaries, so `dump` (download + unpack) beats a
+    # source build. CRAFT_PROJECT_VERSION comes from `version:`; the Debian arch
+    # in CRAFT_ARCH_BUILD_FOR (amd64/arm64) matches HashiCorp's linux_<arch>.
+    plugin: dump
+    source: https://releases.hashicorp.com/terraform/${CRAFT_PROJECT_VERSION}/terraform_${CRAFT_PROJECT_VERSION}_linux_${CRAFT_ARCH_BUILD_FOR}.zip
+    source-type: zip
+    organize:
+      # The archive holds a bare `terraform` at its root; move it under bin/ so
+      # setup-base can add a single, predictable directory to PATH.
+      terraform: bin/terraform
+
+plugs:
+  # Fetch private git modules over SSH during `terraform init`/`get` using the
+  # host's ssh-agent. Opt-in: the ssh-agent interface never auto-connects, so
+  # the consumer wires it explicitly with
+  # `workshop connect <workshop>/terraform-cli:ssh-agent`.
+  ssh-agent:
+    interface: ssh-agent
+
+# No mount plug is declared for the provider plugin cache: mount plugs always
+# auto-connect to system:mount (there is no per-plug opt-out), which would make
+# a host-backed cache mandatory. Keeping the cache OPTIONAL, setup-base points
+# TF_PLUGIN_CACHE_DIR at a plain local directory that setup-project creates. A
+# consumer who wants the cache to survive a rebuilding refresh can graft a mount
+# at that path in their own workshop.yaml (see README, "Persistent plugin cache").

@@ -1,0 +1,20 @@
+#!/bin/bash
+# setup-base — wire the Terraform CLI onto the system PATH and point the
+# provider plugin cache at the (optionally mounted) cache directory.
+#
+# Runs as root when the SDK is first installed and on every workshop refresh;
+# its effects are baked into the base snapshot. `SDK` points at the SDK
+# installation root inside the workshop (the `dump` part put terraform at
+# "$SDK/bin/terraform"). errexit + pipefail are set by Workshop.
+
+# System-wide env under /etc/profile.d/ so it applies across shells. $SDK is
+# expanded now (bakes the real install path); \$PATH stays literal for runtime.
+cat <<EOF > /etc/profile.d/terraform.sh
+export PATH="$SDK/bin:\$PATH"
+export TF_PLUGIN_CACHE_DIR="/home/workshop/.cache/terraform"
+EOF
+
+# Emit the version for the install log. No `| head` here: `head` closing the
+# pipe early sends SIGPIPE to terraform, and pipefail would surface that (141)
+# as a hook failure. terraform's first output line is the version anyway.
+"$SDK/bin/terraform" version

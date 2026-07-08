@@ -1,0 +1,4 @@
+name: tf-scratch
+base: ubuntu@24.04
+sdks:
+  - name: try-terraform-cli

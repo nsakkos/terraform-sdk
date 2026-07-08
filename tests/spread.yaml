@@ -1,0 +1,13 @@
+project: terraform-sdk
+
+backends:
+  lxd:
+    type: lxd
+    systems:
+      - ubuntu-24.04
+
+suites:
+  tests/main/:
+    summary: End-to-end SDK checks
+
+path: /root/proj

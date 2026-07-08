@@ -1,0 +1,9 @@
+#!/bin/bash
+# setup-project — per-user setup, runs as the `workshop` user after setup-base,
+# once the project directory and interface plugs/slots are connected.
+#
+# Ensure the provider plugin cache directory exists. Terraform refuses to start
+# when TF_PLUGIN_CACHE_DIR points at a missing directory; mkdir -p is idempotent
+# and harmless when a consumer has grafted a mount at this path for persistence.
+
+mkdir -p "$HOME/.cache/terraform"
