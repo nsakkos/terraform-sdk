@@ -5,7 +5,10 @@
 # (a persistent provider plugin cache, SSH-agent access for private git modules)
 # are exposed as plugs the consuming workshop wires as needed.
 name: terraform-cli
-version: "1.15.7" # keep in sync with ./VERSION (Renovate bumps VERSION)
+# The version is adopted from the ./VERSION file at build time (see the
+# `terraform` part's override-pull -> `craftctl set version`). VERSION is the
+# single source of truth; Renovate bumps it and the packed artifact follows.
+adopt-info: terraform
 summary: The HashiCorp Terraform CLI, packaged as a thin Workshop SDK
 description: |
   A thin Workshop SDK that installs the HashiCorp Terraform CLI from the
@@ -23,16 +26,30 @@ platforms:
 
 parts:
   terraform:
-    # HashiCorp ships prebuilt binaries, so `dump` (download + unpack) beats a
-    # source build. CRAFT_PROJECT_VERSION comes from `version:`; the Debian arch
-    # in CRAFT_ARCH_BUILD_FOR (amd64/arm64) matches HashiCorp's linux_<arch>.
+    # HashiCorp ships prebuilt binaries, so we download + unpack rather than
+    # build from source. override-pull reads the pinned version from ./VERSION
+    # (Renovate's bump target) and `craftctl set version` adopts it as the SDK
+    # version — keeping VERSION the single source of truth (no literal to drift).
+    # CRAFT_ARCH_BUILD_FOR (amd64/arm64) matches HashiCorp's linux_<arch> asset.
     plugin: dump
-    source: https://releases.hashicorp.com/terraform/${CRAFT_PROJECT_VERSION}/terraform_${CRAFT_PROJECT_VERSION}_linux_${CRAFT_ARCH_BUILD_FOR}.zip
-    source-type: zip
+    source: . # placeholder — override-pull replaces the fetch step entirely
+    build-packages:
+      - unzip # extract HashiCorp's zip in override-pull (no native dump fetch)
+    override-pull: |
+      VERSION="$(cat "${CRAFT_PROJECT_DIR}/VERSION")"
+      craftctl set version="${VERSION}"
+      curl -fsSL -o "${CRAFT_PART_SRC}/terraform.zip" \
+        "https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_${CRAFT_ARCH_BUILD_FOR}.zip"
+      cd "${CRAFT_PART_SRC}"
+      unzip -o terraform.zip
+      rm -f terraform.zip
     organize:
       # The archive holds a bare `terraform` at its root; move it under bin/ so
       # setup-base can add a single, predictable directory to PATH.
       terraform: bin/terraform
+    prime:
+      # Ship ONLY the binary — never the placeholder-source repo files.
+      - bin/terraform
 
 plugs:
   # Fetch private git modules over SSH during `terraform init`/`get` using the

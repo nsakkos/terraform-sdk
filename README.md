@@ -56,10 +56,10 @@ sdkcraft test        # runs the spread tests under tests/ against a clean contai
 
 ## Versioning
 
-`version:` in `sdkcraft.yaml` and the `VERSION` file both pin the upstream
-Terraform release. Renovate (see `renovate.json`) opens PRs to bump `VERSION`
-as new Terraform releases ship; update `version:` in `sdkcraft.yaml` to match
-when merging.
+The `VERSION` file is the single source of truth for the pinned upstream
+Terraform release; `sdkcraft.yaml` adopts it at build time (`adopt-info` +
+`craftctl set version`). Renovate (see `renovate.json`) opens PRs to bump
+`VERSION` as new Terraform releases ship — no separate literal to keep in sync.
 
 
 ## License and copyright

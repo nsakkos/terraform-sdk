@@ -1,0 +1,28 @@
+name: Build and Upload SDK
+
+on:
+  push:
+    branches:
+      # Publish from the major-only version branch "1" (-> Store track "1").
+      - "[0-9]+"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch name (e.g., 1)"
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    uses: canonical/sdkcraft-actions/.github/workflows/upload.yml@main
+    with:
+      # Multi-base SDK (several ubuntu@ entries in platforms), so enumerate each
+      # base:arch and use the --platform flag.
+      platforms: '["ubuntu@22.04:amd64","ubuntu@24.04:amd64","ubuntu@24.04:arm64"]'
+      platform-flag: "--platform"
+    secrets:
+      SDKCRAFT_STORE_CREDENTIALS: ${{ secrets.SDKCRAFT_STORE_CREDENTIALS }}

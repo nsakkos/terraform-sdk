@@ -1,15 +1,26 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Bump the pinned Terraform version in VERSION from upstream GitHub releases.",
       "managerFilePatterns": ["/^VERSION$/"],
-      "matchStrings": ["^(?<currentValue>.+)\\s*$"],
+      "matchStrings": ["(?<currentValue>[0-9.]+)"],
       "depNameTemplate": "hashicorp/terraform",
       "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^v(?<version>.+)$"
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "baseBranchPatterns": ["1"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["hashicorp/terraform"],
+      "matchBaseBranches": ["1"],
+      "allowedVersions": "/^1\\./"
     }
   ]
 }
+
